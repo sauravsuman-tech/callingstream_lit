@@ -5,8 +5,8 @@ import requests
 import json
 
 
-BACKEND_HTTP = "https://f062-103-160-27-74.ngrok-free.app"
-BACKEND_WS = "wss://f062-103-160-27-74.ngrok-free.app"
+BACKEND_HTTP = "https://mammary-related-outpost.ngrok-free.dev"
+BACKEND_WS = "wss://mammary-related-outpost.ngrok-free.dev"
 
 st.set_page_config(
     page_title="Calling App",
