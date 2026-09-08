@@ -1,17 +1,718 @@
-from sqlalchemy import event
+# from sqlalchemy import event
+# import streamlit as st
+# import streamlit.components.v1 as components
+# import requests
+# import json
+
+
+# BACKEND_HTTP = "https://mammary-related-outpost.ngrok-free.dev"
+# BACKEND_WS = "wss://mammary-related-outpost.ngrok-free.dev"
+
+# st.set_page_config(
+#     page_title="Calling App",
+#     page_icon="📞",
+#     layout="wide"
+# )
+
+# if "call_id" not in st.session_state:
+#     st.session_state.call_id = None
+
+# if "user_id" not in st.session_state:
+#     st.session_state.user_id = ""
+
+# if "remote_user_id" not in st.session_state:
+#     st.session_state.remote_user_id = ""
+
+# if "in_call" not in st.session_state:
+#     st.session_state.in_call = False
+
+
+# def create_call(user_id, remote_user_id):
+#     payload = {
+#         "call_type": "one_to_one",
+#         "created_by": user_id,
+#         "participants": [
+#             user_id,
+#             remote_user_id
+#         ],
+#         "recording": {
+#             "enabled": False,
+#             "audio": False,
+#             "video": False
+#         },
+#         "transcription": False
+#     }
+#     try:
+#         response = requests.post(
+#             f"{BACKEND_HTTP}/calls",
+#             json=payload,
+#             timeout=10
+#         )
+#         if response.status_code != 200:
+#             st.error(response.text)
+#             return None
+#         data = response.json()
+#         call_id = data["call"]["id"]
+#         return call_id
+
+#     except Exception as e:
+#         st.error(
+#             f"Unable to create call: {e}"
+#         )
+#         return None
+
+
+# def join_call(call_id, user_id):
+#     try:
+#         response = requests.post(
+#             f"{BACKEND_HTTP}/calls/{call_id}/join/{user_id}",
+#             timeout=10
+#         )
+#         if response.status_code != 200:
+#             st.error(response.text)
+#             return False
+#         return True
+
+#     except Exception as e:
+#         st.error(
+#             f"Unable to join call: {e}"
+#         )
+#         return False
+
+# def end_call(call_id):
+#     try:
+#         requests.post(
+#             f"{BACKEND_HTTP}/calls/{call_id}/end",
+#             timeout=10
+#         )
+#     except Exception:
+#         pass
+
+# st.title("📞 Calling Application")
+
+# st.caption(
+#     "One-to-One WebRTC Audio / Video Call"
+# )
+
+# with st.sidebar:
+#     st.header("User")
+#     user_id = st.text_input(
+#         "Your User ID",
+#         value=st.session_state.user_id or "user1"
+#     )
+#     remote_user_id = st.text_input(
+#         "Other User ID",
+#         value=st.session_state.remote_user_id or "user2"
+#     )
+#     st.session_state.user_id = user_id
+#     st.session_state.remote_user_id = remote_user_id
+
+
+# st.subheader("Call")
+# col1, col2 = st.columns(2)
+
+# with col1:
+#     st.markdown("### 📞 Caller")
+#     if st.button("Create Call", use_container_width=True):
+#         if not user_id:
+#             st.error("Enter your User ID")
+#         elif not remote_user_id:
+#             st.error("Enter other user's ID")
+#         else:
+#             call_id = create_call(
+#                 user_id,
+#                 remote_user_id
+#             )
+#             if call_id:
+#                 st.session_state.call_id = call_id
+#                 joined = join_call(
+#                     call_id,
+#                     user_id
+#                 )
+#                 if joined:
+#                     st.session_state.in_call = True
+#                     st.success(
+#                         f"Call created: {call_id}"
+#                     )
+#                     st.rerun()
+
+# with col2:
+#     st.markdown("### 📲 Receiver")
+#     call_id_input = st.text_input(
+#         "Enter Call ID",
+#         value=""
+#     )
+#     if st.button("Join Call", use_container_width=True):
+#         if not call_id_input:
+#             st.error("Enter Call ID")
+#         elif not user_id:
+#             st.error("Enter your User ID")
+#         else:
+#             try:
+#                 call_id = int(
+#                     call_id_input
+#                 )
+#             except ValueError:
+#                 st.error(
+#                     "Call ID must be a number"
+#                 )
+#                 call_id = None
+
+#             if call_id:
+#                 joined = join_call(
+#                     call_id,
+#                     user_id
+#                 )
+#                 if joined:
+#                     st.session_state.call_id = call_id
+#                     st.session_state.in_call = True
+#                     st.success(f"Joined call: {call_id}")
+#                     st.rerun()
+
+# if st.session_state.call_id:
+#     st.info(
+#         f"Call ID: {st.session_state.call_id}"
+#     )
+
+# if st.session_state.in_call:
+#     st.subheader("🎥 Video Call")
+#     call_id = st.session_state.call_id
+#     html_code = f"""
+    
+# <!DOCTYPE html>
+# <html>
+# <head>
+# <style>
+
+# body {{
+#     margin: 0;
+#     background: #111827;
+#     color: white;
+#     font-family: Arial, sans-serif;
+# }}
+# .container {{
+#     padding: 10px;
+# }}
+# .videos {{
+#     display: flex;
+#     gap: 15px;
+#     flex-wrap: wrap;
+# }}
+
+# .video-box {{
+#     width: 48%;
+#     min-width: 300px;
+# }}
+
+# video {{
+#     width: 100%;
+#     background: black;
+#     border-radius: 12px;
+# }}
+
+# .status {{
+#     margin: 10px 0;
+#     padding: 10px;
+#     background: #1f2937;
+#     border-radius: 8px;
+# }}
+
+# .controls {{
+#     display: flex;
+#     gap: 10px;
+#     margin-top: 15px;
+# }}
+
+# button {{
+#     padding: 10px 16px;
+#     border: none;
+#     border-radius: 8px;
+#     cursor: pointer;
+#     background: #374151;
+#     color: white;
+# }}
+
+# button:hover {{
+#     background: #4b5563;
+# }}
+
+# .end {{
+#     background: #dc2626;
+# }}
+
+# </style>
+# </head>
+# <body>
+
+# <div class="container">
+# <div class="status">
+
+# Status:
+# <span id="status">
+# Connecting...
+# </span>
+# </div>
+
+# <div class="videos">
+# <div class="video-box">
+# <p>Local Video</p>
+# <video
+#     id="localVideo"
+#     autoplay
+#     muted
+#     playsinline>
+# </video>
+# </div>
+
+# <div class="video-box">
+# <p>Remote Video</p>
+
+# <video
+#     id="remoteVideo"
+#     autoplay
+#     playsinline>
+# </video>
+# </div>
+# </div>
+
+# <div class="controls">
+# <button onclick="toggleMute()">
+# 🎤 Mute
+# </button>
+
+# <button onclick="toggleCamera()">
+# 📹 Camera
+# </button>
+# </div>
+# </div>
+
+# <script>
+# const CALL_ID = "{call_id}";
+# const USER_ID = "{user_id}";
+# const REMOTE_USER_ID = "{remote_user_id}";
+
+# const WS_URL =
+#     "{BACKEND_WS}/ws/calls/"
+#     + CALL_ID
+#     + "/"
+#     + USER_ID;
+
+# let socket = null;
+# let peerConnection = null;
+# let localStream = null;
+# let remoteStream = null;
+# let isMuted = false;
+# let cameraEnabled = true;
+# let iceCandidatesQueue = [];
+# let mediaReady = Promise.resolve();
+# let offerSent = false;
+
+# function setStatus(message) {{
+#     document.getElementById(
+#         "status"
+#     ).innerText = message;
+
+# }}
+
+# function createPeerConnection() {{
+#     peerConnection =
+#         new RTCPeerConnection({{
+#             iceServers: [
+#                 {{
+#                     urls:
+#                     "stun:stun.l.google.com:19302"
+#                 }}
+#             ]
+#         }});
+
+#     remoteStream = new MediaStream();
+
+#     const remoteVideo = document.getElementById("remoteVideo");
+#     remoteVideo.srcObject = remoteStream;
+
+#     peerConnection.ontrack =
+#         function(event) {{
+#             console.log("Remote track received:", event.track.kind);
+#             if (event.streams && event.streams[0]) {{
+#                 remoteVideo.srcObject = event.streams[0];
+#             }} else {{
+#                 remoteStream.addTrack(event.track);
+#                 remoteVideo.srcObject = remoteStream;
+#             }}
+#             remoteVideo.play().catch(error =>
+#                 console.warn("Remote video autoplay was blocked:", error)
+#             );
+#         }};
+
+#     peerConnection.onicecandidate =
+#         function(event) {{
+#             if (event.candidate) {{
+#                 socket.send(
+#                     JSON.stringify({{
+#                         event:"ice_candidate",
+#                         to: REMOTE_USER_ID,
+#                         candidate: event.candidate.candidate,
+#                         sdpMid: event.candidate.sdpMid,
+#                         sdpMLineIndex: event.candidate.sdpMLineIndex
+#                     }})
+#                 );
+#             }}
+#         }};
+
+#     peerConnection.onconnectionstatechange =
+#         function() {{
+#             console.log("WebRTC connection state:", peerConnection.connectionState);
+#             setStatus(
+#                 "WebRTC: "
+#                 + peerConnection.connectionState
+#             );
+#         }};
+
+#     peerConnection.oniceconnectionstatechange =
+#         function() {{
+#             console.log("ICE connection state:", peerConnection.iceConnectionState);
+#         }};
+# }}
+
+
+# async function startMedia() {{
+#     try {{
+#         localStream =
+#             await navigator.mediaDevices
+#                 .getUserMedia({{
+#                     audio: true,
+#                     video: true
+#                 }});
+
+#         document.getElementById(
+#             "localVideo"
+#         ).srcObject = localStream;
+
+#         localStream
+#             .getTracks()
+#             .forEach(track => {{
+#                 peerConnection.addTrack(
+#                     track,
+#                     localStream
+#                 );
+
+#             }});
+
+#     }}
+#     catch(error) {{
+#         console.error(error);
+#         setStatus(
+#             "Camera/Microphone permission denied"
+#         );
+#     }}
+# }}
+
+# async function processIceQueue() {{
+#     while (iceCandidatesQueue.length > 0) {{
+#         const message = iceCandidatesQueue.shift();
+#         await peerConnection.addIceCandidate({{
+#             candidate: message.candidate,
+#             sdpMid: message.sdpMid,
+#             sdpMLineIndex: message.sdpMLineIndex
+#         }});
+#     }}
+# }}
+
+# async function createOffer() {{
+#     await mediaReady;
+#     if (offerSent || peerConnection.signalingState !== "stable") {{
+#         return;
+#     }}
+#     if (peerConnection.getSenders().length === 0) {{
+#         setStatus("Cannot call: camera/microphone unavailable");
+#         return;
+#     }}
+
+#     const offer =
+#         await peerConnection.createOffer();
+#     await peerConnection
+#         .setLocalDescription(
+#             offer
+#         );
+#     socket.send(
+#         JSON.stringify({{
+#             event: "offer",
+#             target: REMOTE_USER_ID,
+#             sdp: offer.sdp
+#         }})
+#     );
+#     offerSent = true;
+#     setStatus(
+#         "Calling " + REMOTE_USER_ID
+#     );
+# }}
+
+# async function handleOffer(message) {{
+#     await mediaReady;
+#     await peerConnection
+#         .setRemoteDescription({{
+#             type: "offer",
+#             sdp: message.sdp
+#         }});
+
+#     await processIceQueue();
+
+#     const answer =
+#         await peerConnection
+#             .createAnswer();
+#     await peerConnection
+#         .setLocalDescription(
+#             answer
+#         );
+
+#     socket.send(
+#         JSON.stringify({{
+#             event: "answer",
+#             to: message.from,
+#             sdp: answer.sdp
+#         }})
+#     );
+#     setStatus(
+#         "Call connected"
+#     );
+
+# }}
+
+# async function handleAnswer(message) {{
+#     await peerConnection
+#         .setRemoteDescription({{
+#             type: "answer",
+#             sdp: message.sdp
+
+#         }});
+
+#     await processIceQueue();
+
+#     setStatus(
+#         "Call connected"
+#     );
+# }}
+
+# async function handleIceCandidate(message) {{
+#     if (!message.candidate) {{
+#         return;
+#     }}
+
+#     if (!peerConnection.remoteDescription) {{
+#         iceCandidatesQueue.push(message);
+#         return;
+#     }}
+
+#     try {{
+#         await peerConnection
+#             .addIceCandidate({{
+#                 candidate:
+#                     message.candidate,
+#                 sdpMid:
+#                     message.sdpMid,
+#                 sdpMLineIndex:
+#                     message.sdpMLineIndex
+
+#             }});
+
+#     }}
+#     catch(error) {{
+
+#         console.error(
+#             "ICE error:",
+#             error
+#         );
+
+#     }}
+
+# }}
+
+# function connectWebSocket() {{
+#     socket =
+#         new WebSocket(
+#             WS_URL
+#         );
+
+#     socket.onopen =
+#         async function() {{
+#             setStatus(
+#                 "Signaling connected"
+#             );
+#             createPeerConnection();
+#             mediaReady = startMedia();
+#             await mediaReady;
+
+#         }};
+
+#     socket.onmessage =
+#         async function(event) {{
+#             const message =
+#                 JSON.parse(
+#                     event.data
+#                 );
+#             console.log(
+#                 "Received:",
+#                 message
+#             );
+#             if (
+#                 message.event
+#                 === "user_joined"
+#             ) {{
+#                 if (
+#                     String(message.user_id)
+#                     === String(REMOTE_USER_ID)
+#                 ) {{
+#                     await createOffer();
+#                 }}
+#             }}
+#             else if (
+#                 message.event
+#                 === "offer"
+#             ) {{
+#                 await handleOffer(
+#                     message
+#                 );
+#             }}
+#             else if (
+#                 message.event
+#                 === "answer"
+#             ) {{
+#                 await handleAnswer(
+#                     message
+#                 );
+#             }}
+#             else if (
+#                 message.event
+#                 === "ice_candidate"
+#             ) {{
+#                 await handleIceCandidate(
+#                     message
+#                 );
+#             }}
+#             else if (
+#                 message.event
+#                 === "user_left"
+#             ) {{
+#                 setStatus(
+#                     "Other user left"
+#                 );
+#             }}
+#         }};
+
+#     socket.onerror =
+#         function(error) {{
+#             console.error(error);
+#             setStatus(
+#                 "WebSocket error"
+#             );
+#         }};
+
+#     socket.onclose =
+#         function() {{
+#             setStatus(
+#                 "Disconnected"
+#             );
+
+#         }};
+# }}
+
+# function toggleMute() {{
+#     if (!localStream) {{
+#         return;
+#     }}
+#     const audioTracks = localStream.getAudioTracks();
+#     audioTracks.forEach(
+#         track => {{
+#             track.enabled = !track.enabled;
+#             isMuted = !track.enabled;
+#         }}
+#     );
+
+#     socket.send(
+#         JSON.stringify({{
+#             event: "mute",
+#             channel: "audio",
+#             muted: isMuted
+#         }})
+#     );
+# }}
+
+# function toggleCamera() {{
+#     if (!localStream) {{
+#         return;
+#     }}
+#     const videoTracks =
+#         localStream.getVideoTracks();
+
+#     videoTracks.forEach(
+#         track => {{
+#             track.enabled =
+#                 !track.enabled;
+
+#             cameraEnabled =
+#                 track.enabled;
+
+#         }}
+#     );
+
+#     socket.send(
+#         JSON.stringify({{
+#             event: "channel_status",
+#             channel: "video",
+#             status:
+#                 cameraEnabled
+#                     ? "active"
+#                     : "inactive"
+#         }})
+#     );
+
+# }}
+
+# connectWebSocket();
+# </script>
+# </body>
+
+# </html>
+# """
+#     components.html(
+#         html_code,
+#         height=650,
+#         scrolling=False
+#     )
+
+
+# if st.session_state.in_call:
+#     st.divider()
+#     if st.button(
+#         "❌ End Call",
+#         type="primary"
+#     ):
+#         end_call(
+#             st.session_state.call_id
+#         )
+#         st.session_state.in_call = False
+#         st.session_state.call_id = None
+#         st.rerun()
+
+
+
+
+
+
 import streamlit as st
 import streamlit.components.v1 as components
 import requests
-import json
 
+# BACKEND_HTTP = "http://127.0.0.1:8000"
+# BACKEND_WS = "ws://127.0.0.1:8000"
 
 BACKEND_HTTP = "https://mammary-related-outpost.ngrok-free.dev"
 BACKEND_WS = "wss://mammary-related-outpost.ngrok-free.dev"
 
 st.set_page_config(
-    page_title="Calling App",
+    page_title="WebRTC Calling",
     page_icon="📞",
-    layout="wide"
+    layout="wide",
 )
 
 if "call_id" not in st.session_state:
@@ -20,506 +721,973 @@ if "call_id" not in st.session_state:
 if "user_id" not in st.session_state:
     st.session_state.user_id = ""
 
-if "remote_user_id" not in st.session_state:
-    st.session_state.remote_user_id = ""
+if "call_type" not in st.session_state:
+    st.session_state.call_type = "one_to_one"
 
 if "in_call" not in st.session_state:
     st.session_state.in_call = False
 
 
-def create_call(user_id, remote_user_id):
+# ============================================================
+# API FUNCTIONS
+# ============================================================
+
+def create_call(user_id, call_type):
+
     payload = {
-        "call_type": "one_to_one",
+        "call_type": call_type,
         "created_by": user_id,
+
+        # Creator joins first.
+        # Other users can join using Call ID.
         "participants": [
-            user_id,
-            remote_user_id
+            user_id
         ],
+
         "recording": {
             "enabled": False,
             "audio": False,
             "video": False
         },
+
         "transcription": False
     }
+
     try:
+
         response = requests.post(
             f"{BACKEND_HTTP}/calls",
             json=payload,
             timeout=10
         )
+
         if response.status_code != 200:
-            st.error(response.text)
+
+            st.error(
+                f"Create call failed:\n{response.text}"
+            )
+
             return None
+
         data = response.json()
-        call_id = data["call"]["id"]
-        return call_id
+
+        return data["call"]["id"]
 
     except Exception as e:
+
         st.error(
             f"Unable to create call: {e}"
         )
+
         return None
 
 
 def join_call(call_id, user_id):
+
     try:
+
         response = requests.post(
             f"{BACKEND_HTTP}/calls/{call_id}/join/{user_id}",
             timeout=10
         )
+
         if response.status_code != 200:
-            st.error(response.text)
+
+            st.error(
+                f"Join call failed:\n{response.text}"
+            )
+
             return False
+
         return True
 
     except Exception as e:
+
         st.error(
             f"Unable to join call: {e}"
         )
+
         return False
 
+
 def end_call(call_id):
+
     try:
+
         requests.post(
             f"{BACKEND_HTTP}/calls/{call_id}/end",
             timeout=10
         )
+
     except Exception:
+
         pass
 
-st.title("📞 Calling Application")
+
+# ============================================================
+# HEADER
+# ============================================================
+
+st.title("📞 WebRTC Calling Application")
 
 st.caption(
-    "One-to-One WebRTC Audio / Video Call"
+    "One-to-One / One-to-Many / Many-to-Many"
 )
 
+
+# ============================================================
+# SIDEBAR
+# ============================================================
+
 with st.sidebar:
-    st.header("User")
+
+    st.header("👤 User")
+
     user_id = st.text_input(
         "Your User ID",
         value=st.session_state.user_id or "user1"
     )
-    remote_user_id = st.text_input(
-        "Other User ID",
-        value=st.session_state.remote_user_id or "user2"
-    )
-    st.session_state.user_id = user_id
-    st.session_state.remote_user_id = remote_user_id
 
+    call_type = st.selectbox(
+        "Call Type",
+        [
+            "one_to_one",
+            "one_to_many",
+            "many_to_many"
+        ],
+        index=[
+            "one_to_one",
+            "one_to_many",
+            "many_to_many"
+        ].index(
+            st.session_state.call_type
+        )
+    )
+
+    st.session_state.user_id = user_id
+    st.session_state.call_type = call_type
+
+    st.divider()
+
+    st.markdown("### Call types")
+
+    st.markdown(
+        """
+        **One-to-One**
+
+        2 users
+
+        **One-to-Many**
+
+        1 host + multiple viewers
+
+        **Many-to-Many**
+
+        Multiple users can send/receive video
+        """
+    )
+
+
+# ============================================================
+# CREATE / JOIN
+# ============================================================
 
 st.subheader("Call")
+
+
 col1, col2 = st.columns(2)
 
+
+# ============================================================
+# CREATE CALL
+# ============================================================
+
 with col1:
-    st.markdown("### 📞 Caller")
-    if st.button("Create Call", use_container_width=True):
-        if not user_id:
-            st.error("Enter your User ID")
-        elif not remote_user_id:
-            st.error("Enter other user's ID")
-        else:
-            call_id = create_call(
-                user_id,
-                remote_user_id
+
+    st.markdown("### 📞 Create Call")
+
+    if st.button(
+        "Create Call",
+        use_container_width=True
+    ):
+
+        if not user_id.strip():
+
+            st.error(
+                "Enter your User ID"
             )
+
+        else:
+
+            call_id = create_call(
+                user_id.strip(),
+                call_type
+            )
+
             if call_id:
+
                 st.session_state.call_id = call_id
-                joined = join_call(
-                    call_id,
-                    user_id
+                st.session_state.in_call = True
+
+                st.success(
+                    f"Call created: {call_id}"
                 )
-                if joined:
-                    st.session_state.in_call = True
-                    st.success(
-                        f"Call created: {call_id}"
-                    )
-                    st.rerun()
+
+                st.rerun()
+
+
+# ============================================================
+# JOIN CALL
+# ============================================================
 
 with col2:
-    st.markdown("### 📲 Receiver")
-    call_id_input = st.text_input(
-        "Enter Call ID",
+
+    st.markdown("### 🔗 Join Call")
+
+    join_call_id = st.text_input(
+        "Call ID",
         value=""
     )
-    if st.button("Join Call", use_container_width=True):
-        if not call_id_input:
-            st.error("Enter Call ID")
-        elif not user_id:
-            st.error("Enter your User ID")
+
+    if st.button(
+        "Join Call",
+        use_container_width=True
+    ):
+
+        if not user_id.strip():
+
+            st.error(
+                "Enter your User ID"
+            )
+
+        elif not join_call_id.strip():
+
+            st.error(
+                "Enter Call ID"
+            )
+
         else:
-            try:
-                call_id = int(
-                    call_id_input
-                )
-            except ValueError:
-                st.error(
-                    "Call ID must be a number"
-                )
-                call_id = None
 
-            if call_id:
-                joined = join_call(
-                    call_id,
-                    user_id
-                )
-                if joined:
-                    st.session_state.call_id = call_id
-                    st.session_state.in_call = True
-                    st.success(f"Joined call: {call_id}")
-                    st.rerun()
+            success = join_call(
+                join_call_id.strip(),
+                user_id.strip()
+            )
 
-if st.session_state.call_id:
-    st.info(
-        f"Call ID: {st.session_state.call_id}"
-    )
+            if success:
+
+                st.session_state.call_id = (
+                    join_call_id.strip()
+                )
+
+                st.session_state.in_call = True
+
+                st.success(
+                    "Joined call successfully"
+                )
+
+                st.rerun()
+
+
+# ============================================================
+# CALL INFO
+# ============================================================
 
 if st.session_state.in_call:
-    st.subheader("🎥 Video Call")
-    call_id = st.session_state.call_id
+    st.divider()
+    st.success(
+        f"Connected to Call: "
+        f"{st.session_state.call_id}"
+    )
+    st.info(
+        f"User: {st.session_state.user_id}  |  "
+        f"Type: {st.session_state.call_type}"
+    )
+
+# WEBRTC UI
+
+if (
+    st.session_state.in_call
+    and st.session_state.call_id
+    and st.session_state.user_id
+):
+
+    call_id = str(
+        st.session_state.call_id
+    )
+
+    current_user_id = str(
+        st.session_state.user_id
+    )
+
+    ws_url = (
+        f"{BACKEND_WS}"
+        f"/ws/calls/"
+        f"{call_id}/"
+        f"{current_user_id}"
+    )
     html_code = f"""
-    
+
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
+
 <style>
+
+* {{
+    box-sizing: border-box;
+}}
 
 body {{
     margin: 0;
-    background: #111827;
-    color: white;
-    font-family: Arial, sans-serif;
-}}
-.container {{
     padding: 10px;
+
+    background: #111;
+    color: white;
+
+    font-family:
+        Arial,
+        sans-serif;
 }}
-.videos {{
-    display: flex;
-    gap: 15px;
-    flex-wrap: wrap;
+
+#status {{
+    padding: 10px;
+    margin-bottom: 10px;
+
+    background: #222;
+
+    border-radius: 8px;
+
+    font-size: 14px;
+}}
+
+#videos {{
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(280px, 1fr)
+        );
+
+    gap: 12px;
 }}
 
 .video-box {{
-    width: 48%;
-    min-width: 300px;
+    position: relative;
+
+    background: #000;
+
+    border-radius: 10px;
+
+    overflow: hidden;
+
+    min-height: 220px;
 }}
 
-video {{
+.video-box video {{
     width: 100%;
-    background: black;
-    border-radius: 12px;
+    height: 100%;
+
+    min-height: 220px;
+
+    object-fit: cover;
+
+    background: #000;
 }}
 
-.status {{
-    margin: 10px 0;
-    padding: 10px;
-    background: #1f2937;
-    border-radius: 8px;
+.video-label {{
+    position: absolute;
+
+    left: 8px;
+    bottom: 8px;
+
+    padding: 5px 9px;
+
+    background: rgba(0,0,0,0.65);
+
+    border-radius: 5px;
+
+    font-size: 13px;
 }}
 
-.controls {{
+#controls {{
     display: flex;
+
     gap: 10px;
+
     margin-top: 15px;
+
+    flex-wrap: wrap;
 }}
 
 button {{
-    padding: 10px 16px;
+    padding: 10px 18px;
+
     border: none;
-    border-radius: 8px;
+
+    border-radius: 7px;
+
     cursor: pointer;
-    background: #374151;
-    color: white;
-}}
 
-button:hover {{
-    background: #4b5563;
-}}
-
-.end {{
-    background: #dc2626;
+    font-size: 14px;
 }}
 
 </style>
+
 </head>
+
+
 <body>
 
-<div class="container">
-<div class="status">
 
-Status:
-<span id="status">
-Connecting...
-</span>
+<div id="status">
+    Connecting...
 </div>
 
-<div class="videos">
-<div class="video-box">
-<p>Local Video</p>
-<video
-    id="localVideo"
-    autoplay
-    muted
-    playsinline>
-</video>
+
+<div id="videos">
+
+    <!-- LOCAL VIDEO -->
+
+    <div class="video-box">
+
+        <video
+            id="localVideo"
+            autoplay
+            muted
+            playsinline>
+        </video>
+
+        <div class="video-label">
+            You ({current_user_id})
+        </div>
+
+    </div>
+
+
+    <!-- REMOTE VIDEOS -->
+
+    <div id="remoteVideos"></div>
+
 </div>
 
-<div class="video-box">
-<p>Remote Video</p>
 
-<video
-    id="remoteVideo"
-    autoplay
-    playsinline>
-</video>
-</div>
-</div>
+<div id="controls">
 
-<div class="controls">
-<button onclick="toggleMute()">
-🎤 Mute
-</button>
+    <button onclick="toggleMute()">
+        🎤 Mute
+    </button>
 
-<button onclick="toggleCamera()">
-📹 Camera
-</button>
-</div>
+    <button onclick="toggleCamera()">
+        📷 Camera
+    </button>
+
 </div>
 
 <script>
-const CALL_ID = "{call_id}";
-const USER_ID = "{user_id}";
-const REMOTE_USER_ID = "{remote_user_id}";
-
-const WS_URL =
-    "{BACKEND_WS}/ws/calls/"
-    + CALL_ID
-    + "/"
-    + USER_ID;
+const USER_ID = "{current_user_id}";
+const WS_URL = "{ws_url}";
 
 let socket = null;
-let peerConnection = null;
 let localStream = null;
-let remoteStream = null;
-let isMuted = false;
-let cameraEnabled = true;
-let iceCandidatesQueue = [];
-let mediaReady = Promise.resolve();
-let offerSent = false;
+const peerConnections = {{}};
+const remoteStreams = {{}};
+
+const iceQueues = {{}};
 
 function setStatus(message) {{
-    document.getElementById(
-        "status"
-    ).innerText = message;
+    const element = document.getElementById("status");
+    element.innerText = message;
+}}
+
+
+// ============================================================
+// REMOTE VIDEO
+// ============================================================
+
+function createRemoteVideo(remoteUserId) {{
+
+    remoteUserId =
+        String(remoteUserId);
+
+
+    const existing =
+        document.getElementById(
+            "video-box-" +
+            remoteUserId
+        );
+
+
+    if (existing) {{
+
+        return;
+
+    }}
+
+
+    const container =
+        document.getElementById(
+            "remoteVideos"
+        );
+
+
+    const box =
+        document.createElement(
+            "div"
+        );
+
+
+    box.className =
+        "video-box";
+
+
+    box.id =
+        "video-box-" +
+        remoteUserId;
+
+
+    const video =
+        document.createElement(
+            "video"
+        );
+
+
+    video.id =
+        "remote-" +
+        remoteUserId;
+
+
+    video.autoplay = true;
+
+    video.playsInline = true;
+
+
+    const label =
+        document.createElement(
+            "div"
+        );
+
+
+    label.className =
+        "video-label";
+
+
+    label.innerText =
+        remoteUserId;
+
+
+    box.appendChild(video);
+
+    box.appendChild(label);
+
+    container.appendChild(box);
 
 }}
 
-function createPeerConnection() {{
-    peerConnection =
+
+// ============================================================
+// REMOVE REMOTE VIDEO
+// ============================================================
+
+function removeRemoteVideo(remoteUserId) {{
+
+    remoteUserId =
+        String(remoteUserId);
+
+
+    const box =
+        document.getElementById(
+            "video-box-" +
+            remoteUserId
+        );
+
+
+    if (box) {{
+
+        box.remove();
+
+    }}
+
+}}
+
+
+// ============================================================
+// CREATE PEER CONNECTION
+// ============================================================
+
+function createPeerConnection(
+    remoteUserId
+) {{
+
+    remoteUserId =
+        String(remoteUserId);
+
+
+    if (
+        peerConnections[
+            remoteUserId
+        ]
+    ) {{
+
+        return peerConnections[
+            remoteUserId
+        ];
+
+    }}
+
+
+    console.log(
+        "Creating peer connection:",
+        remoteUserId
+    );
+
+
+    const pc =
         new RTCPeerConnection({{
+
             iceServers: [
+
                 {{
                     urls:
-                    "stun:stun.l.google.com:19302"
+                        "stun:stun.l.google.com:19302"
                 }}
+
             ]
+
         }});
 
-    remoteStream = new MediaStream();
 
-    const remoteVideo = document.getElementById("remoteVideo");
-    remoteVideo.srcObject = remoteStream;
-
-    peerConnection.ontrack =
-        function(event) {{
-            console.log("Remote track received:", event.track.kind);
-            if (event.streams && event.streams[0]) {{
-                remoteVideo.srcObject = event.streams[0];
-            }} else {{
-                remoteStream.addTrack(event.track);
-                remoteVideo.srcObject = remoteStream;
-            }}
-            remoteVideo.play().catch(error =>
-                console.warn("Remote video autoplay was blocked:", error)
-            );
-        }};
-
-    peerConnection.onicecandidate =
-        function(event) {{
-            if (event.candidate) {{
-                socket.send(
-                    JSON.stringify({{
-                        event:"ice_candidate",
-                        to: REMOTE_USER_ID,
-                        candidate: event.candidate.candidate,
-                        sdpMid: event.candidate.sdpMid,
-                        sdpMLineIndex: event.candidate.sdpMLineIndex
-                    }})
-                );
-            }}
-        }};
-
-    peerConnection.onconnectionstatechange =
-        function() {{
-            console.log("WebRTC connection state:", peerConnection.connectionState);
-            setStatus(
-                "WebRTC: "
-                + peerConnection.connectionState
-            );
-        }};
-
-    peerConnection.oniceconnectionstatechange =
-        function() {{
-            console.log("ICE connection state:", peerConnection.iceConnectionState);
-        }};
-}}
+    peerConnections[
+        remoteUserId
+    ] = pc;
 
 
-async function startMedia() {{
-    try {{
-        localStream =
-            await navigator.mediaDevices
-                .getUserMedia({{
-                    audio: true,
-                    video: true
-                }});
+    remoteStreams[
+        remoteUserId
+    ] = new MediaStream();
 
+
+    iceQueues[
+        remoteUserId
+    ] = [];
+
+
+    createRemoteVideo(
+        remoteUserId
+    );
+
+
+    const remoteVideo =
         document.getElementById(
-            "localVideo"
-        ).srcObject = localStream;
+            "remote-" +
+            remoteUserId
+        );
+
+
+    // --------------------------------------------------------
+    // Add local tracks
+    // --------------------------------------------------------
+
+    if (localStream) {{
 
         localStream
             .getTracks()
-            .forEach(track => {{
-                peerConnection.addTrack(
-                    track,
-                    localStream
+            .forEach(
+                track => {{
+
+                    pc.addTrack(
+                        track,
+                        localStream
+                    );
+
+                }}
+            );
+
+    }}
+
+
+    // --------------------------------------------------------
+    // Remote tracks
+    // --------------------------------------------------------
+
+    pc.ontrack =
+        function(event) {{
+
+            console.log(
+                "Remote track:",
+                remoteUserId,
+                event.track.kind
+            );
+
+
+            const stream =
+                remoteStreams[
+                    remoteUserId
+                ];
+
+
+            if (
+                event.streams &&
+                event.streams[0]
+            ) {{
+
+                remoteVideo.srcObject =
+                    event.streams[0];
+
+            }}
+            else {{
+
+                stream.addTrack(
+                    event.track
                 );
 
-            }});
+                remoteVideo.srcObject =
+                    stream;
 
+            }}
+
+
+            remoteVideo
+                .play()
+                .catch(
+                    () => {{}}
+                );
+
+        }};
+
+
+    // --------------------------------------------------------
+    // ICE candidate
+    // --------------------------------------------------------
+
+    pc.onicecandidate =
+        function(event) {{
+
+            if (
+                !event.candidate
+            ) {{
+
+                return;
+
+            }}
+
+
+            if (
+                socket &&
+                socket.readyState ===
+                WebSocket.OPEN
+            ) {{
+
+                socket.send(
+                    JSON.stringify({{
+
+                        event:
+                            "ice_candidate",
+
+                        to:
+                            remoteUserId,
+
+                        candidate:
+                            event.candidate.candidate,
+
+                        sdpMid:
+                            event.candidate.sdpMid,
+
+                        sdpMLineIndex:
+                            event.candidate.sdpMLineIndex
+
+                    }})
+                );
+
+            }}
+
+        }};
+
+
+    // --------------------------------------------------------
+    // Connection state
+    // --------------------------------------------------------
+
+    pc.onconnectionstatechange =
+        function() {{
+
+            console.log(
+                "Connection state:",
+                remoteUserId,
+                pc.connectionState
+            );
+
+
+            if (
+                pc.connectionState ===
+                "failed"
+            ) {{
+
+                console.log(
+                    "Peer failed:",
+                    remoteUserId
+                );
+
+            }}
+
+
+            if (
+                pc.connectionState ===
+                "disconnected"
+            ) {{
+
+                console.log(
+                    "Peer disconnected:",
+                    remoteUserId
+                );
+
+            }}
+
+        }};
+
+
+    return pc;
+
+}}
+
+async function createOffer(
+    remoteUserId
+) {{
+    remoteUserId =String(remoteUserId);
+
+    if (remoteUserId === String(USER_ID)) {{
+        return; // Don't create an offer to self
     }}
-    catch(error) {{
-        console.error(error);
-        setStatus(
-            "Camera/Microphone permission denied"
+    if (
+        peerConnections[remoteUserId]
+    ) {{
+        console.log(
+            "Peer already exists:",
+            remoteUserId
         );
-    }}
-}}
-
-async function processIceQueue() {{
-    while (iceCandidatesQueue.length > 0) {{
-        const message = iceCandidatesQueue.shift();
-        await peerConnection.addIceCandidate({{
-            candidate: message.candidate,
-            sdpMid: message.sdpMid,
-            sdpMLineIndex: message.sdpMLineIndex
-        }});
-    }}
-}}
-
-async function createOffer() {{
-    await mediaReady;
-    if (offerSent || peerConnection.signalingState !== "stable") {{
         return;
     }}
-    if (peerConnection.getSenders().length === 0) {{
-        setStatus("Cannot call: camera/microphone unavailable");
-        return;
-    }}
-
-    const offer =
-        await peerConnection.createOffer();
-    await peerConnection
-        .setLocalDescription(
-            offer
+    const pc =
+        createPeerConnection(
+            remoteUserId
         );
-    socket.send(
-        JSON.stringify({{
-            event: "offer",
-            target: REMOTE_USER_ID,
-            sdp: offer.sdp
-        }})
-    );
-    offerSent = true;
-    setStatus(
-        "Calling " + REMOTE_USER_ID
-    );
-}}
-
-async function handleOffer(message) {{
-    await mediaReady;
-    await peerConnection
-        .setRemoteDescription({{
-            type: "offer",
-            sdp: message.sdp
-        }});
-
-    await processIceQueue();
-
-    const answer =
-        await peerConnection
-            .createAnswer();
-    await peerConnection
-        .setLocalDescription(
-            answer
-        );
-
-    socket.send(
-        JSON.stringify({{
-            event: "answer",
-            to: message.from,
-            sdp: answer.sdp
-        }})
-    );
-    setStatus(
-        "Call connected"
-    );
-
-}}
-
-async function handleAnswer(message) {{
-    await peerConnection
-        .setRemoteDescription({{
-            type: "answer",
-            sdp: message.sdp
-
-        }});
-
-    await processIceQueue();
-
-    setStatus(
-        "Call connected"
-    );
-}}
-
-async function handleIceCandidate(message) {{
-    if (!message.candidate) {{
-        return;
-    }}
-
-    if (!peerConnection.remoteDescription) {{
-        iceCandidatesQueue.push(message);
-        return;
-    }}
 
     try {{
-        await peerConnection
-            .addIceCandidate({{
-                candidate:
-                    message.candidate,
-                sdpMid:
-                    message.sdpMid,
-                sdpMLineIndex:
-                    message.sdpMLineIndex
 
-            }});
+        const offer =
+            await pc.createOffer();
+
+        await pc.setLocalDescription(
+            offer
+        );
+
+        socket.send(
+            JSON.stringify({{
+
+                event:
+                    "offer",
+
+                target:
+                    remoteUserId,
+
+                sdp:
+                    offer.sdp
+            }})
+        );
+
+        console.log(
+            "Offer sent:",
+            remoteUserId
+        );
 
     }}
     catch(error) {{
 
         console.error(
-            "ICE error:",
+            "Offer error:",
+            error
+        );
+
+    }}
+
+}} 
+
+
+// ============================================================
+// HANDLE OFFER
+// ============================================================
+
+async function handleOffer(
+    message
+) {{
+
+    const remoteUserId =
+        String(
+            message.from
+        );
+
+
+    const pc =
+        createPeerConnection(
+            remoteUserId
+        );
+
+
+    try {{
+
+        await pc.setRemoteDescription({{
+
+            type: "offer",
+
+            sdp:
+                message.sdp
+
+        }});
+
+
+        // Process queued ICE.
+
+        await flushIceQueue(
+            remoteUserId
+        );
+
+
+        const answer =
+            await pc.createAnswer();
+
+
+        await pc.setLocalDescription(
+            answer
+        );
+
+
+        socket.send(
+            JSON.stringify({{
+
+                event:
+                    "answer",
+
+                to:
+                    remoteUserId,
+
+                sdp:
+                    answer.sdp
+
+            }})
+        );
+
+
+        console.log(
+            "Answer sent:",
+            remoteUserId
+        );
+
+    }}
+    catch(error) {{
+
+        console.error(
+            "Offer handling error:",
             error
         );
 
@@ -527,169 +1695,789 @@ async function handleIceCandidate(message) {{
 
 }}
 
+
+// ============================================================
+// HANDLE ANSWER
+// ============================================================
+
+async function handleAnswer(
+    message
+) {{
+
+    const remoteUserId =
+        String(
+            message.from
+        );
+
+
+    const pc =
+        peerConnections[
+            remoteUserId
+        ];
+
+
+    if (!pc) {{
+
+        console.warn(
+            "No peer for answer:",
+            remoteUserId
+        );
+
+        return;
+
+    }}
+
+
+    try {{
+
+        await pc.setRemoteDescription({{
+
+            type:
+                "answer",
+
+            sdp:
+                message.sdp
+
+        }});
+
+
+        await flushIceQueue(
+            remoteUserId
+        );
+
+
+    }}
+    catch(error) {{
+
+        console.error(
+            "Answer error:",
+            error
+        );
+
+    }}
+
+}}
+
+
+// ============================================================
+// HANDLE ICE
+// ============================================================
+
+async function handleIceCandidate(
+    message
+) {{
+
+    const remoteUserId =
+        String(
+            message.from
+        );
+
+
+    const pc =
+        createPeerConnection(
+            remoteUserId
+        );
+
+
+    if (
+        !message.candidate
+    ) {{
+
+        return;
+
+    }}
+
+
+    const candidate = {{
+
+        candidate:
+            message.candidate,
+
+        sdpMid:
+            message.sdpMid,
+
+        sdpMLineIndex:
+            message.sdpMLineIndex
+
+    }};
+
+
+    // Remote description isn't ready yet.
+
+    if (
+        !pc.remoteDescription
+    ) {{
+
+        if (
+            !iceQueues[
+                remoteUserId
+            ]
+        ) {{
+
+            iceQueues[
+                remoteUserId
+            ] = [];
+
+        }}
+
+
+        iceQueues[
+            remoteUserId
+        ].push(candidate);
+
+
+        return;
+
+    }}
+
+
+    try {{
+
+        await pc.addIceCandidate(
+            candidate
+        );
+
+    }}
+    catch(error) {{
+
+        console.error(
+            "ICE error:",
+            remoteUserId,
+            error
+        );
+
+    }}
+
+}}
+
+
+// ============================================================
+// FLUSH ICE QUEUE
+// ============================================================
+
+async function flushIceQueue(
+    remoteUserId
+) {{
+
+    const pc =
+        peerConnections[
+            remoteUserId
+        ];
+
+
+    if (!pc) {{
+
+        return;
+
+    }}
+
+
+    if (
+        !pc.remoteDescription
+    ) {{
+
+        return;
+
+    }}
+
+
+    const queue =
+        iceQueues[
+            remoteUserId
+        ] || [];
+
+
+    while (
+        queue.length > 0
+    ) {{
+
+        const candidate =
+            queue.shift();
+
+
+        try {{
+
+            await pc.addIceCandidate(
+                candidate
+            );
+
+        }}
+        catch(error) {{
+
+            console.error(
+                "Queued ICE error:",
+                error
+            );
+
+        }}
+
+    }}
+
+}}
+
+
+// ============================================================
+// CLOSE PEER
+// ============================================================
+
+function closePeer(
+    remoteUserId
+) {{
+
+    remoteUserId =
+        String(remoteUserId);
+
+
+    const pc =
+        peerConnections[
+            remoteUserId
+        ];
+
+
+    if (pc) {{
+
+        pc.close();
+
+        delete peerConnections[
+            remoteUserId
+        ];
+
+    }}
+
+
+    delete remoteStreams[
+        remoteUserId
+    ];
+
+
+    delete iceQueues[
+        remoteUserId
+    ];
+
+
+    removeRemoteVideo(
+        remoteUserId
+    );
+
+}}
+
+
+// ============================================================
+// LOCAL MEDIA
+// ============================================================
+
+async function startMedia() {{
+
+    try {{
+
+        localStream =
+            await navigator
+                .mediaDevices
+                .getUserMedia({{
+
+                    audio: true,
+
+                    video: true
+
+                }});
+
+
+        const localVideo =
+            document.getElementById(
+                "localVideo"
+            );
+
+
+        localVideo.srcObject =
+            localStream;
+
+
+        localVideo
+            .play()
+            .catch(
+                () => {{}}
+            );
+
+
+        console.log(
+            "Local media started"
+        );
+
+    }}
+    catch(error) {{
+
+        console.error(
+            "getUserMedia error:",
+            error
+        );
+
+
+        setStatus(
+            "Camera/microphone permission denied"
+        );
+
+    }}
+
+}}
+
+
+// ============================================================
+// WEBSOCKET
+// ============================================================
+
 function connectWebSocket() {{
+
     socket =
         new WebSocket(
             WS_URL
         );
 
+
+    // --------------------------------------------------------
+    // OPEN
+    // --------------------------------------------------------
+
     socket.onopen =
         async function() {{
+
+            console.log(
+                "WebSocket connected"
+            );
+
+
             setStatus(
                 "Signaling connected"
             );
-            createPeerConnection();
-            mediaReady = startMedia();
-            await mediaReady;
+
+
+            await startMedia();
+
+
+            // Ask backend for current users.
+
+            socket.send(
+                JSON.stringify({{
+                    event:
+                        "get_users"
+                }})
+            );
 
         }};
 
+
+    // --------------------------------------------------------
+    // MESSAGE
+    // --------------------------------------------------------
+
     socket.onmessage =
         async function(event) {{
+
             const message =
                 JSON.parse(
                     event.data
                 );
+
+
             console.log(
-                "Received:",
+                "WS message:",
                 message
             );
+
+
+            // ==================================================
+            // EXISTING USERS
+            // ==================================================
+
             if (
-                message.event
-                === "user_joined"
+                message.event ===
+                "existing_users"
             ) {{
-                if (
-                    String(message.user_id)
-                    === String(REMOTE_USER_ID)
-                ) {{
-                    await createOffer();
-                }}
+                const users =
+                    message.users || [];
+
+                console.log(
+                    "Existing users:",
+                    users
+                );
+                return;
             }}
-            else if (
-                message.event
-                === "offer"
+
+
+            // ==================================================
+            // NEW USER JOINED
+            // ==================================================
+
+            if (
+                message.event ===
+                "user_joined"
             ) {{
+
+                const remoteUserId =
+                    String(
+                        message.user_id
+                    );
+
+
+                if (
+                    remoteUserId ===
+                    String(USER_ID)
+                ) {{
+
+                    return;
+
+                }}
+
+
+                console.log(
+                    "New user joined:",
+                    remoteUserId
+                );
+
+
+                /*
+                 * We are already in the call.
+                 *
+                 * The existing user creates
+                 * the offer.
+                 */
+
+                await createOffer(
+                    remoteUserId
+                );
+
+
+                return;
+
+            }}
+
+
+            // ==================================================
+            // OFFER
+            // ==================================================
+
+            if (
+                message.event ===
+                "offer"
+            ) {{
+
                 await handleOffer(
                     message
                 );
+
+                return;
+
             }}
-            else if (
-                message.event
-                === "answer"
+
+
+            // ==================================================
+            // ANSWER
+            // ==================================================
+
+            if (
+                message.event ===
+                "answer"
             ) {{
+
                 await handleAnswer(
                     message
                 );
+
+                return;
+
             }}
-            else if (
-                message.event
-                === "ice_candidate"
+
+
+            // ==================================================
+            // ICE
+            // ==================================================
+
+            if (
+                message.event ===
+                "ice_candidate"
             ) {{
+
                 await handleIceCandidate(
                     message
                 );
+
+                return;
+
             }}
-            else if (
-                message.event
-                === "user_left"
+
+
+            // ==================================================
+            // USER LEFT
+            // ==================================================
+
+            if (
+                message.event ===
+                "user_left"
             ) {{
-                setStatus(
-                    "Other user left"
+
+                const remoteUserId =
+                    String(
+                        message.user_id
+                    );
+
+
+                closePeer(
+                    remoteUserId
                 );
+
+
+                setStatus(
+                    remoteUserId +
+                    " left the call"
+                );
+
+
+                return;
+
             }}
+
+
+            // ==================================================
+            // MUTE
+            // ==================================================
+
+            if (
+                message.event ===
+                "mute"
+            ) {{
+
+                console.log(
+                    message.user_id,
+                    "muted:",
+                    message.muted
+                );
+
+
+                return;
+
+            }}
+
+
+            // ==================================================
+            // CHANNEL STATUS
+            // ==================================================
+
+            if (
+                message.event ===
+                "channel_status"
+            ) {{
+
+                console.log(
+                    "Channel:",
+                    message.user_id,
+                    message.channel,
+                    message.status
+                );
+
+
+                return;
+
+            }}
+
         }};
+
+
+    // --------------------------------------------------------
+    // ERROR
+    // --------------------------------------------------------
 
     socket.onerror =
         function(error) {{
-            console.error(error);
+
+            console.error(
+                "WebSocket error:",
+                error
+            );
+
+
             setStatus(
                 "WebSocket error"
             );
+
         }};
+
+
+    // --------------------------------------------------------
+    // CLOSE
+    // --------------------------------------------------------
 
     socket.onclose =
         function() {{
+
+            console.log(
+                "WebSocket closed"
+            );
+
+
             setStatus(
                 "Disconnected"
             );
 
         }};
+
 }}
+
+
+// ============================================================
+// MUTE
+// ============================================================
 
 function toggleMute() {{
+
     if (!localStream) {{
+
         return;
+
     }}
-    const audioTracks = localStream.getAudioTracks();
+
+
+    const audioTracks =
+        localStream.getAudioTracks();
+
+
     audioTracks.forEach(
         track => {{
-            track.enabled = !track.enabled;
-            isMuted = !track.enabled;
-        }}
-    );
 
-    socket.send(
-        JSON.stringify({{
-            event: "mute",
-            channel: "audio",
-            muted: isMuted
-        }})
-    );
-}}
-
-function toggleCamera() {{
-    if (!localStream) {{
-        return;
-    }}
-    const videoTracks =
-        localStream.getVideoTracks();
-
-    videoTracks.forEach(
-        track => {{
             track.enabled =
                 !track.enabled;
 
-            cameraEnabled =
-                track.enabled;
+        }}
+    );
+
+
+    const muted =
+        audioTracks.length > 0
+        ? !audioTracks[0].enabled
+        : false;
+
+
+    if (
+        socket &&
+        socket.readyState ===
+        WebSocket.OPEN
+    ) {{
+
+        socket.send(
+            JSON.stringify({{
+
+                event:
+                    "mute",
+
+                channel:
+                    "audio",
+
+                muted:
+                    muted
+
+            }})
+        );
+
+    }}
+
+}}
+
+
+// ============================================================
+// CAMERA
+// ============================================================
+
+function toggleCamera() {{
+
+    if (!localStream) {{
+
+        return;
+
+    }}
+
+
+    const videoTracks =
+        localStream.getVideoTracks();
+
+
+    videoTracks.forEach(
+        track => {{
+
+            track.enabled =
+                !track.enabled;
 
         }}
     );
 
-    socket.send(
-        JSON.stringify({{
-            event: "channel_status",
-            channel: "video",
-            status:
-                cameraEnabled
+
+    const enabled =
+        videoTracks.length > 0
+        ? videoTracks[0].enabled
+        : false;
+
+
+    if (
+        socket &&
+        socket.readyState ===
+        WebSocket.OPEN
+    ) {{
+
+        socket.send(
+            JSON.stringify({{
+
+                event:
+                    "channel_status",
+
+                channel:
+                    "video",
+
+                status:
+                    enabled
                     ? "active"
                     : "inactive"
-        }})
-    );
+
+            }})
+        );
+
+    }}
 
 }}
 
 connectWebSocket();
+
 </script>
+
 </body>
 
 </html>
 """
+
+
     components.html(
         html_code,
-        height=650,
+        height=720,
         scrolling=False
     )
 
 
+# ============================================================
+# END CALL
+# ============================================================
+
 if st.session_state.in_call:
+
     st.divider()
+
     if st.button(
         "❌ End Call",
-        type="primary"
+        type="primary",
+        use_container_width=True
     ):
+
         end_call(
             st.session_state.call_id
         )
+
         st.session_state.in_call = False
+
         st.session_state.call_id = None
+
         st.rerun()
