@@ -705,7 +705,7 @@ import html
 
 
 BACKEND_HTTP = "https://mammary-related-outpost.ngrok-free.dev"
-BACKEND_WS = "ws://mammary-related-outpost.ngrok-free.dev"
+BACKEND_WS = "wss://mammary-related-outpost.ngrok-free.dev"
 
 
 st.set_page_config(
