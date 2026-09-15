@@ -831,23 +831,23 @@ with st.sidebar:
 
     st.divider()
 
-    st.markdown("### Call types")
+    # st.markdown("### Call types")
 
-    st.markdown(
-        """
-        **One-to-One**
+    # st.markdown(
+    #     """
+    #     **One-to-One**
 
-        Exactly 2 users.
+    #     Exactly 2 users.
 
-        **One-to-Many**
+    #     **One-to-Many**
 
-        1 host + multiple participants.
+    #     1 host + multiple participants.
 
-        **Many-to-Many**
+    #     **Many-to-Many**
 
-        Multiple users can send and receive video.
-        """
-    )
+    #     Multiple users can send and receive video.
+    #     """
+    # )
 
 st.subheader("Call")
 col1, col2 = st.columns(2)
@@ -931,9 +931,6 @@ with col1:
                     )
                     st.stop()
 
-            # ------------------------------------------------
-            # Create call
-            # ------------------------------------------------
 
             call_id = create_call(
                 clean_user_id,
@@ -1001,10 +998,6 @@ with col2:
                 )
                 st.rerun()
 
-# ============================================================
-# CALL INFO
-# ============================================================
-
 if st.session_state.in_call:
     st.divider()
     st.success(
@@ -1017,9 +1010,6 @@ if st.session_state.in_call:
     )
 
 
-# ============================================================
-# WEBRTC UI
-# ============================================================
 
 if (
     st.session_state.in_call
