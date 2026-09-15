@@ -2152,18 +2152,10 @@ function connectWebSocket() {{
                     "Existing users:",
                     users
                 );
-
-
-                /*
-                 *
-                 * IMPORTANT:
-                 *
-                 * Do NOT create offers here.
-                 *
-                 * Existing users will receive
-                 * user_joined when this user joins.
-                 *
-                 */
+                for (const remoteUserId of users) {{
+                if (string(remoteUserId) !== String(USER_ID) {{
+                await createOffer(remoteUserId);
+                }}
 
                 return;
 
@@ -2192,13 +2184,6 @@ function connectWebSocket() {{
                     "New user joined:",
                     remoteUserId
                 );
-
-                /*
-                 *
-                 * Existing user creates offer
-                 * to newly joined user.
-                 *
-                 */
 
                 await createOffer(
                     remoteUserId
