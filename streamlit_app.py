@@ -831,7 +831,7 @@ with st.sidebar:
 
     st.divider()
 
-    # st.markdown("### Call types")
+    st.markdown("### Call types")
 
     # st.markdown(
     #     """
