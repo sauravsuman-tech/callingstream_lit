@@ -1318,11 +1318,10 @@ function createPeerConnection(remoteUserId) {{
             }}
             else {{
 
-                remoteStreams[remoteUserId];
-                    .addTrack(event.track);
+                remoteStreams[remoteUserId].addTrack(event.track);
 
                 remoteVideo.srcObject =
-                    remoteStream[remoteUserId];
+                    remoteStreams[remoteUserId];
             }}
 
             remoteVideo
