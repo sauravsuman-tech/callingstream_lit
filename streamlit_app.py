@@ -698,7 +698,6 @@
 
 
 
-
 import streamlit as st
 import streamlit.components.v1 as components
 import requests
@@ -1368,7 +1367,6 @@ function createPeerConnection(remoteUserId) {{
 
     pc.onconnectionstatechange =
         function() {{
-
             console.log(
                 "WebRTC:",
                 remoteUserId,
@@ -1379,10 +1377,9 @@ function createPeerConnection(remoteUserId) {{
                 pc.connectionState ===
                 "connected"
             ) {{
-
                 setStatus(
-                    "Call connected with:",
-                    remoteUserId
+                    "Call connected with:" + remoteUserId
+                    //code changes
                 );
             }}
 
@@ -1544,7 +1541,6 @@ async function handleOffer(message) {{
                     answer.sdp
             }})
         );
-
 
         console.log(
             "Answer sent:",
@@ -2154,4 +2150,3 @@ if st.session_state.in_call:
         st.session_state.in_call = False
         st.session_state.call_id = None
         st.rerun()
-
