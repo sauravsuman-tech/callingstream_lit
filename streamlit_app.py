@@ -716,39 +716,32 @@ function createPeerConnection(remoteUserId) {{
         function(event) {{
 
             if (!event.candidate) {{
-
                 return;
-
             }}
-
 
             if (
                 socket &&
                 socket.readyState ===
                 WebSocket.OPEN
             ){{
-
-                socket.send(
-                    JSON.stringify({{
-
-                        event:
-                            "ice_candidate",
-
-                        to:
-                            remoteUserId,
-
-                        candidate:
-                            event.candidate.candidate,
-
-                        sdpMid:
-                            event.candidate.sdpMid,
-
-                        sdpMLineIndex:
-                            event.candidate.sdpMLineIndex
-
-                    }})
+                const candidate = {{
+                
+                    event: "ice_candidate",
+                    to: remoteUserId,
+                    candidate: event.candidate.candidate,
+                    sdpMid: event.candidate.sdpMid,
+                    sdpMLineIndex: event.candidate.sdpMLineIndex
+                }}
+                console.log(
+                    "Sending ICE:",
+                    USRR_ID,
+                    "->",
+                    remoteuserId,
+                    candidate
                 );
-
+                socket.send(
+                    JSON.stringify(candidate)
+                )
             }}
 
         }};
@@ -1056,37 +1049,32 @@ async function handleIceCandidate(message) {{
 
 
     if (!message.candidate) {{
-
         return;
 
     }}
-
 
     const pc =
         createPeerConnection(
             remoteUserId
         );
 
-
     const candidate = {{
-
-        candidate:
-            message.candidate,
-
-        sdpMid:
-            message.sdpMid,
-
-        sdpMLineIndex:
-            message.sdpMLineIndex
+        candidate: message.candidate,
+        sdpMid: message.sdpMid,
+        sdpMLineIndex: message.sdpMLineIndex
 
     }};
-
+    #new code for checking
+    console.log(
+        "REceived ICE:",
+        USER_ID,
+        "<-",
+        remoteUserId
+    );
 
     if (!pc.remoteDescription) {{
-
         iceQueues[remoteUserId]
             .push(candidate);
-
 
         console.log(
             "ICE queued:",
@@ -1102,16 +1090,15 @@ async function handleIceCandidate(message) {{
         await pc.addIceCandidate(
             candidate
         );
+        console.log("ICE added:", remoteUserId);
 
     }}
     catch(error) {{
-
         console.error(
             "ICE error:",
             remoteUserId,
             error
         );
-
     }}
 
 }}
