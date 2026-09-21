@@ -734,7 +734,7 @@ function createPeerConnection(remoteUserId) {{
                 }}
                 console.log(
                     "Sending ICE:",
-                    USRR_ID,
+                    USER_ID,
                     "->",
                     remoteuserId,
                     candidate
