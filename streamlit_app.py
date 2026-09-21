@@ -877,7 +877,7 @@ function createPeerConnection(remoteUserId) {{
                         localStream
                     );
 
-                }
+                }}
             );
 
     }}
@@ -986,7 +986,7 @@ function createPeerConnection(remoteUserId) {{
                     }}
                 );
 
-        };
+        }};
 
 
     /*
