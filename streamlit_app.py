@@ -615,7 +615,7 @@ ONE PEER CONNECTION PER REMOTE USER
 ============================================================
 */
 
-const peerConnections = {};
+const peerConnections = {{}};
 
 
 /*
@@ -624,7 +624,7 @@ ICE QUEUES
 ============================================================
 */
 
-const iceQueues = {};
+const iceQueues = {{}};
 
 
 /*
@@ -633,7 +633,7 @@ REMOTE STREAMS
 ============================================================
 */
 
-const remoteStreams = {};
+const remoteStreams = {{}};
 
 
 /*
@@ -642,7 +642,7 @@ OFFER STATE
 ============================================================
 */
 
-const makingOffer = {};
+const makingOffer = {{}};
 
 
 /*
@@ -1039,7 +1039,7 @@ function createPeerConnection(remoteUserId) {{
                     }}
                 );
 
-        };
+        }};
 
 
     /*
