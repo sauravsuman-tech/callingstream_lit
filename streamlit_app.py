@@ -100,6 +100,15 @@ def join_call(call_id, user_id):
             )
             return False
 
+        data = response.json()
+
+        # Backend should return success=True
+        if data.get("success") is False:
+            st.error(
+                data.get("message", "Unable to join call")
+            )
+            return False
+
         return True
 
     except Exception as e:
@@ -284,7 +293,7 @@ with col1:
                     st.stop()
 
             # ----------------------------------------
-            # CREATE
+            # CREATE CALL
             # ----------------------------------------
 
             call_id = create_call(
@@ -432,6 +441,7 @@ if (
 
     html_code = f"""
 <!DOCTYPE html>
+
 <html>
 
 <head>
@@ -462,8 +472,10 @@ body {{
 
 #videos {{
     display: grid;
-    grid-template-columns:
-        repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(280px, 1fr)
+    );
     gap: 12px;
 }}
 
@@ -520,7 +532,6 @@ button {{
     Connecting...
 </div>
 
-
 <div id="videos">
 
     <!-- LOCAL VIDEO -->
@@ -540,13 +551,11 @@ button {{
 
     </div>
 
-
     <!-- REMOTE VIDEOS -->
 
     <div id="remoteVideos"></div>
 
 </div>
-
 
 <div id="controls">
 
@@ -582,11 +591,31 @@ let localStream = null;
 
 /*
 ============================================================
+MEDIA READY PROMISE
+============================================================
+
+IMPORTANT:
+
+Backend immediately sends "existing_users" after WebSocket
+connection.
+
+That message can arrive BEFORE getUserMedia() finishes.
+
+So we create a promise and force all signaling actions
+to wait until local audio/video tracks exist.
+============================================================
+*/
+
+let mediaReadyPromise = Promise.resolve(false);
+
+
+/*
+============================================================
 ONE PEER CONNECTION PER REMOTE USER
 ============================================================
 */
 
-const peerConnections = {{}};
+const peerConnections = {};
 
 
 /*
@@ -595,7 +624,7 @@ ICE QUEUES
 ============================================================
 */
 
-const iceQueues = {{}};
+const iceQueues = {};
 
 
 /*
@@ -604,7 +633,7 @@ REMOTE STREAMS
 ============================================================
 */
 
-const remoteStreams = {{}};
+const remoteStreams = {};
 
 
 /*
@@ -613,7 +642,7 @@ OFFER STATE
 ============================================================
 */
 
-const makingOffer = {{}};
+const makingOffer = {};
 
 
 /*
@@ -803,9 +832,26 @@ function createPeerConnection(remoteUserId) {{
     );
 
     console.log(
+        "LOCAL STREAM READY:",
+        !!localStream
+    );
+
+    console.log(
+        "LOCAL TRACK COUNT:",
+        localStream
+            ? localStream.getTracks().length
+            : 0
+    );
+
+    console.log(
         "===================================="
     );
 
+
+    /*
+    Browser-side STUN.
+    No TURN required for this configuration.
+    */
 
     const configuration = {{
 
@@ -856,7 +902,14 @@ function createPeerConnection(remoteUserId) {{
     ========================================================
     */
 
-    if (localStream) {{
+    if (!localStream) {{
+
+        console.error(
+            "CRITICAL: LOCAL STREAM NOT READY"
+        );
+
+    }}
+    else {{
 
         localStream
             .getTracks()
@@ -986,7 +1039,7 @@ function createPeerConnection(remoteUserId) {{
                     }}
                 );
 
-        }};
+        };
 
 
     /*
@@ -1123,7 +1176,7 @@ function createPeerConnection(remoteUserId) {{
             if (
                 pc.iceConnectionState ===
                 "connected"
-            ){{
+            ) {{
 
                 console.log(
                     "===================================="
@@ -1296,6 +1349,27 @@ async function createOffer(remoteUserId) {{
         String(remoteUserId);
 
 
+    /*
+    IMPORTANT:
+    Never create an offer until local media exists.
+    */
+
+    const mediaReady =
+        await mediaReadyPromise;
+
+
+    if (!mediaReady) {{
+
+        console.error(
+            "MEDIA NOT READY - OFFER CANCELLED:",
+            remoteUserId
+        );
+
+        return;
+
+    }}
+
+
     if (
         remoteUserId ===
         String(USER_ID)
@@ -1362,6 +1436,18 @@ async function createOffer(remoteUserId) {{
         );
 
 
+        console.log(
+            "TRACKS BEFORE OFFER:",
+            pc.getSenders().map(
+                function(sender) {{
+                    return sender.track
+                        ? sender.track.kind
+                        : "NO TRACK";
+                }}
+            )
+        );
+
+
         const offer =
             await pc.createOffer();
 
@@ -1374,6 +1460,12 @@ async function createOffer(remoteUserId) {{
         console.log(
             "LOCAL DESCRIPTION SET:",
             remoteUserId
+        );
+
+
+        console.log(
+            "OFFER SDP:",
+            pc.localDescription.sdp
         );
 
 
@@ -1444,6 +1536,26 @@ HANDLE OFFER
 */
 
 async function handleOffer(message) {{
+
+    /*
+    IMPORTANT:
+    Incoming offer also waits for local media.
+    */
+
+    const mediaReady =
+        await mediaReadyPromise;
+
+
+    if (!mediaReady) {{
+
+        console.error(
+            "MEDIA NOT READY - OFFER IGNORED"
+        );
+
+        return;
+
+    }}
+
 
     const remoteUserId =
         String(message.from);
@@ -1631,6 +1743,18 @@ async function handleAnswer(message) {{
         );
 
 
+        console.log(
+            "SENDERS AFTER ANSWER:",
+            pc.getSenders().map(
+                function(sender) {{
+                    return sender.track
+                        ? sender.track.kind
+                        : "NO TRACK";
+                }}
+            )
+        );
+
+
         setStatus(
             "Waiting for WebRTC connection..."
         );
@@ -1678,6 +1802,14 @@ async function handleIceCandidate(message) {{
         return;
 
     }}
+
+
+    /*
+    If an ICE message arrives before media,
+    wait for media first.
+    */
+
+    await mediaReadyPromise;
 
 
     const pc =
@@ -1895,7 +2027,15 @@ async function startMedia() {{
     try {{
 
         console.log(
+            "===================================="
+        );
+
+        console.log(
             "REQUESTING CAMERA/MICROPHONE..."
+        );
+
+        console.log(
+            "===================================="
         );
 
 
@@ -1909,6 +2049,59 @@ async function startMedia() {{
                     video: true
 
                 }});
+
+
+        console.log(
+            "LOCAL MEDIA OBJECT CREATED"
+        );
+
+
+        const audioTracks =
+            localStream.getAudioTracks();
+
+
+        const videoTracks =
+            localStream.getVideoTracks();
+
+
+        console.log(
+            "AUDIO TRACKS:",
+            audioTracks.length
+        );
+
+
+        console.log(
+            "VIDEO TRACKS:",
+            videoTracks.length
+        );
+
+
+        audioTracks.forEach(
+            function(track) {{
+
+                console.log(
+                    "AUDIO TRACK:",
+                    track.id,
+                    track.readyState,
+                    track.enabled
+                );
+
+            }}
+        );
+
+
+        videoTracks.forEach(
+            function(track) {{
+
+                console.log(
+                    "VIDEO TRACK:",
+                    track.id,
+                    track.readyState,
+                    track.enabled
+                );
+
+            }}
+        );
 
 
         const localVideo =
@@ -1937,22 +2130,6 @@ async function startMedia() {{
 
         console.log(
             "LOCAL MEDIA STARTED"
-        );
-
-
-        console.log(
-            "AUDIO TRACKS:",
-            localStream
-                .getAudioTracks()
-                .length
-        );
-
-
-        console.log(
-            "VIDEO TRACKS:",
-            localStream
-                .getVideoTracks()
-                .length
         );
 
 
@@ -2023,11 +2200,25 @@ function connectWebSocket() {{
             );
 
 
+            /*
+            IMPORTANT:
+
+            Start media BEFORE requesting users.
+            */
+
+            mediaReadyPromise =
+                startMedia();
+
+
             const mediaStarted =
-                await startMedia();
+                await mediaReadyPromise;
 
 
             if (!mediaStarted) {{
+
+                console.error(
+                    "MEDIA START FAILED"
+                );
 
                 return;
 
@@ -2035,9 +2226,40 @@ function connectWebSocket() {{
 
 
             console.log(
+                "===================================="
+            );
+
+            console.log(
+                "MEDIA READY BEFORE SIGNALING"
+            );
+
+            console.log(
+                "USER:",
+                USER_ID
+            );
+
+            console.log(
+                "TRACKS:",
+                localStream.getTracks().length
+            );
+
+            console.log(
+                "===================================="
+            );
+
+
+            console.log(
                 "REQUESTING EXISTING USERS"
             );
 
+
+            /*
+            Backend may already have sent its automatic
+            existing_users message.
+
+            This request is safe because createOffer()
+            checks whether a peer already exists.
+            */
 
             socket.send(
                 JSON.stringify({{
@@ -2079,6 +2301,28 @@ function connectWebSocket() {{
                     "existing_users"
                 ) {{
 
+                    /*
+                    CRITICAL FIX:
+
+                    Wait for camera/microphone before creating
+                    any RTCPeerConnection or offer.
+                    */
+
+                    const mediaStarted =
+                        await mediaReadyPromise;
+
+
+                    if (!mediaStarted) {{
+
+                        console.error(
+                            "MEDIA NOT READY - EXISTING USERS IGNORED"
+                        );
+
+                        return;
+
+                    }}
+
+
                     const users =
                         message.users || [];
 
@@ -2090,8 +2334,7 @@ function connectWebSocket() {{
 
 
                     /*
-                        Newly connected user creates
-                        the offers.
+                    Newly connected user creates offers.
                     */
 
                     for (
@@ -2142,11 +2385,10 @@ function connectWebSocket() {{
 
 
                     /*
-                        Do not create another offer here.
+                    Do NOT create an offer here.
 
-                        The newly joined user receives
-                        existing_users and creates
-                        the offer.
+                    The newly joined browser receives
+                    existing_users and creates the offer.
                     */
 
                     return;
