@@ -4,28 +4,15 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 
-# ============================================================
-# BACKEND CONFIGURATION
-# ============================================================
-
 BACKEND_HTTP = "https://mammary-related-outpost.ngrok-free.dev"
 BACKEND_WS = "wss://mammary-related-outpost.ngrok-free.dev"
 
-
-# ============================================================
-# STREAMLIT CONFIG
-# ============================================================
 
 st.set_page_config(
     page_title="WebRTC Calling",
     page_icon="📞",
     layout="wide",
 )
-
-
-# ============================================================
-# SESSION STATE
-# ============================================================
 
 if "call_id" not in st.session_state:
     st.session_state.call_id = None
@@ -40,12 +27,7 @@ if "in_call" not in st.session_state:
     st.session_state.in_call = False
 
 
-# ============================================================
-# CREATE CALL
-# ============================================================
-
 def create_call(user_id, call_type, participants):
-
     payload = {
         "call_type": call_type,
         "created_by": user_id,
@@ -81,19 +63,12 @@ def create_call(user_id, call_type, participants):
         )
         return None
 
-
-# ============================================================
-# JOIN CALL
-# ============================================================
-
 def join_call(call_id, user_id):
-
     try:
         response = requests.post(
             f"{BACKEND_HTTP}/calls/{call_id}/join/{user_id}",
             timeout=10,
         )
-
         if response.status_code != 200:
             st.error(
                 f"Join call failed:\n{response.text}"
@@ -117,44 +92,24 @@ def join_call(call_id, user_id):
         )
         return False
 
-
-# ============================================================
-# END CALL
-# ============================================================
-
 def end_call(call_id):
-
     try:
         response = requests.post(
             f"{BACKEND_HTTP}/calls/{call_id}/end",
             timeout=10,
         )
-
         return response.status_code == 200
 
     except Exception:
         return False
 
-
-# ============================================================
-# PAGE
-# ============================================================
-
 st.title("📞 WebRTC Calling Application")
-
 st.caption(
     "One-to-One / One-to-Many / Many-to-Many"
 )
 
-
-# ============================================================
-# SIDEBAR
-# ============================================================
-
 with st.sidebar:
-
     st.header("👤 User")
-
     user_id = st.text_input(
         "Your User ID",
         value=st.session_state.user_id or "user1",
@@ -180,41 +135,28 @@ with st.sidebar:
     st.session_state.call_type = call_type
 
     st.divider()
+    # st.markdown("### Call types")
+    # st.markdown(
+    #     """
+    #     **One-to-One**
 
-    st.markdown("### Call types")
+    #     Exactly 2 users.
 
-    st.markdown(
-        """
-        **One-to-One**
+    #     **One-to-Many**
 
-        Exactly 2 users.
+    #     1 host + multiple participants.
 
-        **One-to-Many**
+    #     **Many-to-Many**
 
-        1 host + multiple participants.
+    #     Multiple users can send and receive video.
+    #     """
+    # )
 
-        **Many-to-Many**
-
-        Multiple users can send and receive video.
-        """
-    )
-
-
-# ============================================================
-# CALL SECTION
-# ============================================================
 
 st.subheader("Call")
-
 col1, col2 = st.columns(2)
 
-
-# ============================================================
-# CREATE CALL
-# ============================================================
-
 with col1:
-
     st.markdown("### 📞 Create Call")
 
     participant_text = st.text_input(
@@ -261,12 +203,7 @@ with col1:
                     clean_user_id,
                 )
 
-            # ----------------------------------------
-            # VALIDATION
-            # ----------------------------------------
-
             if call_type == "one_to_one":
-
                 if len(participants) != 2:
 
                     st.error(
